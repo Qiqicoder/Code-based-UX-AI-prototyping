@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Selected work — Ziying Qi</title>
+<meta name="description" content="Selected work — examples of code-based UX prototyping, interaction specs, and prototypes, prepared for Tom at Philips." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --paper:#FAFAFA;
+    --surface:#FFFFFF;
+    --ink:#16181C;
+    --body:#31353C;
+    --muted:#666E78;
+    --hairline:#E4E6EA;
+    --accent:#1B4D89;
+    --accent-bright:#2E6BC6;
+    --chip-bg:#EEF2F7;
+    --maxw:1080px;
+    --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;background:var(--paper);color:var(--body);
+    font-family:var(--sans);font-size:15px;line-height:1.55;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  }
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px;}
+  a{color:var(--accent-bright);text-decoration:none;}
+  a:hover{text-decoration:underline;}
+  :focus-visible{outline:2px solid var(--accent-bright);outline-offset:3px;border-radius:3px;}
+  img,video,iframe{max-width:100%;}
+
+  /* ---- header ---- */
+  header.hero{padding:36px 0 24px;border-bottom:1px solid var(--hairline);}
+  .hero-row{display:flex;justify-content:space-between;gap:32px;flex-wrap:wrap;}
+  .hero-left{flex:1 1 460px;min-width:280px;}
+  .eyebrow{
+    font-family:var(--mono);font-size:.72rem;font-weight:500;
+    letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+    margin:0 0 10px;display:block;
+  }
+  header.hero h1{font-size:clamp(1.5rem,3.2vw,2rem);color:var(--ink);font-weight:700;letter-spacing:-.01em;margin:0 0 10px;}
+  header.hero p.sub{font-size:.96rem;color:var(--body);margin:0 0 14px;max-width:56ch;}
+  .tag-row{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;}
+  .tag-chip{
+    font-family:var(--mono);font-size:.7rem;color:var(--accent);
+    background:var(--chip-bg);border-radius:20px;padding:5px 12px;
+    letter-spacing:.01em;
+  }
+  .meta{font-size:.86rem;color:var(--muted);}
+  .meta b{color:var(--ink);font-weight:500;}
+
+  .contact-links{
+    flex:0 0 auto;display:flex;flex-direction:column;gap:6px;
+    align-items:flex-end;text-align:right;padding-top:2px;
+  }
+  .contact-links a,.contact-links span{font-family:var(--mono);font-size:.78rem;color:var(--body);}
+  .contact-links a{color:var(--accent-bright);}
+
+  /* ---- selected work heading ---- */
+  section#work{padding:26px 0 40px;}
+  .work-head{margin-bottom:18px;max-width:70ch;}
+  .work-head h2{font-size:1.1rem;color:var(--ink);font-weight:600;margin:0 0 5px;}
+  .work-head p{margin:0;color:var(--muted);font-size:.88rem;}
+
+  /* ---- project grid ---- */
+  .projects-main{display:grid;grid-template-columns:repeat(2,1fr);gap:22px;}
+  .project{
+    background:var(--surface);border:1px solid var(--hairline);border-radius:12px;
+    padding:20px 20px 20px;display:flex;flex-direction:column;
+  }
+
+  .card-head{display:flex;gap:10px;align-items:flex-start;margin-bottom:12px;}
+  .num{
+    flex-shrink:0;width:26px;height:26px;border-radius:50%;background:var(--accent);
+    color:#fff;font-family:var(--mono);font-size:.72rem;display:flex;
+    align-items:center;justify-content:center;margin-top:1px;
+  }
+  .card-head h2{font-size:1.02rem;font-weight:600;color:var(--ink);margin:0 0 2px;}
+  .card-head .tagline{margin:0;font-size:.78rem;color:var(--muted);}
+
+  /* shared 16:9 media frame — used for hero images, video, and embeds alike,
+     so all four cards land on the same height */
+  .media-16x9{
+    aspect-ratio:16/9;border-radius:8px;overflow:hidden;position:relative;
+    border:1px solid var(--hairline);background:#F1F3F6;margin-bottom:12px;
+  }
+  .media-16x9 img{width:100%;height:100%;object-fit:contain;display:block;}
+  .media-16x9 video{width:100%;height:100%;object-fit:cover;display:block;}
+  .media-16x9 iframe{position:absolute;inset:0;width:100%;height:100%;border:0;}
+
+  .project .desc{
+    font-size:.85rem;color:var(--body);margin:0 0 12px;
+    display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;
+  }
+
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+  .tags .tag-chip{font-size:.66rem;padding:4px 10px;}
+
+  .btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto;}
+  .btn{
+    font-family:var(--mono);font-size:.72rem;
+    padding:7px 12px;border-radius:6px;border:1px solid var(--hairline);
+    background:var(--surface);color:var(--ink);transition:border-color .15s,background .15s;
+  }
+  .btn:hover{text-decoration:none;border-color:var(--accent-bright);background:#F3F7FC;}
+
+  /* ---- footer ---- */
+  footer{padding:28px 0 44px;margin-top:8px;border-top:1px solid var(--hairline);}
+  footer .row{
+    font-family:var(--mono);font-size:.8rem;color:var(--muted);
+    display:flex;flex-wrap:wrap;gap:6px 18px;
+  }
+  footer .row .ph{color:#9AA3AF;}
+
+  .reveal{opacity:0;transform:translateY(10px);transition:opacity .5s ease,transform .5s ease;}
+  .reveal.in{opacity:1;transform:none;}
+
+  @media (max-width:820px){
+    .projects-main{grid-template-columns:1fr;}
+  }
+  @media (max-width:600px){
+    header.hero{padding:32px 0 20px;}
+    .hero-row{flex-direction:column;}
+    .contact-links{align-items:flex-start;text-align:left;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .reveal{opacity:1;transform:none;transition:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap hero-row reveal">
+    <div class="hero-left">
+      <span class="eyebrow">Selected work</span>
+      <h1>Code-based UX &amp; AI prototyping</h1>
+      <p class="sub">Selected examples showing how I translate UX decisions into coded prototypes, reusable UI logic, and developer-ready implementation details.</p>
+      <div class="tag-row">
+        <span class="tag-chip">Code-based prototyping</span>
+        <span class="tag-chip">AI-assisted workflow</span>
+        <span class="tag-chip">Interaction specs</span>
+        <span class="tag-chip">Developer hand-off</span>
+      </div>
+    </div>
+
+    <div class="contact-links">
+      <a href="https://ziyingqi.framer.website" target="_blank" rel="noopener">ziyingqi.framer.website</a>
+      <a href="https://github.com/Qiqicoder" target="_blank" rel="noopener">github.com/Qiqicoder</a>
+      <span>ziyingqi77@gmail.com</span>
+    </div>
+  </div>
+</header>
+
+<section id="work">
+  <div class="wrap">
+    <div class="work-head reveal">
+      <h2>Selected examples</h2>
+      <p>These examples focus on how I turn design decisions into working prototypes, structured UI logic, and implementation-ready specs for developers.</p>
+    </div>
+
+    <div class="projects-main">
+
+      <!-- 01. SmartFormFields -->
+      <article class="project reveal">
+        <div class="card-head">
+          <span class="num">01</span>
+          <div>
+            <h2>SmartFormFields</h2>
+            <p class="tagline">Design-system form generator · Claude Skill</p>
+          </div>
+        </div>
+
+        <div class="media-16x9">
+          <img src="assets/smartformfields-hero.png" alt="Three-part diagram: Claude Skill rules and required field IDs, the generated JSON schema, and the rendered SmartFormFields component" />
+        </div>
+
+        <p class="desc">A Claude Skill that turns plain-language requirements, Excel templates, or content-change requests into a validated JSON schema for the design system's Smart Form component — enforcing field IDs, validation, and conditional logic automatically.</p>
+
+        <div class="tags">
+          <span class="tag-chip">Claude Skill</span>
+          <span class="tag-chip">JSON schema</span>
+          <span class="tag-chip">Framer component</span>
+          <span class="tag-chip">Design system</span>
+        </div>
+
+        <div class="btns">
+          <a class="btn" href="assets/smartformfields-schema.skill" target="_blank" rel="noopener">Skill file ↗</a>
+          <a class="btn" href="assets/smartformfields-example-schema.json" target="_blank" rel="noopener">Schema ↗</a>
+          <a class="btn" href="demos/smartformfields-demo.html" target="_blank" rel="noopener">Rendered form ↗</a>
+        </div>
+      </article>
+
+      <!-- 02. Reply -->
+      <article class="project reveal">
+        <div class="card-head">
+          <span class="num">02</span>
+          <div>
+            <h2>Reply</h2>
+            <p class="tagline">AI-in-inbox HTML prototype &amp; interaction spec</p>
+          </div>
+        </div>
+
+        <div class="media-16x9">
+          <img src="assets/reply-hero.png" alt="Reply interaction diagram: message context with an AI-drafted reply, the three input-box states, and an implementation spec excerpt" />
+        </div>
+
+        <p class="desc">Interaction design for an AI assistant inside another app's input box: distinguishing person vs. AI, ambient suggestion pills, and attachment-reading behavior. Delivered as interaction specs and HTML prototypes for engineering.</p>
+
+        <div class="tags">
+          <span class="tag-chip">Interaction spec</span>
+          <span class="tag-chip">HTML prototype</span>
+          <span class="tag-chip">State logic</span>
+        </div>
+
+        <div class="btns">
+          <a class="btn" href="demos/reply-demo-1.html" target="_blank" rel="noopener">Prototype 1 ↗</a>
+          <a class="btn" href="demos/reply-demo-2.html" target="_blank" rel="noopener">Prototype 2 ↗</a>
+          <a class="btn" href="assets/reply-interaction-spec.md" target="_blank" rel="noopener">Spec ↗</a>
+        </div>
+      </article>
+
+      <!-- 03. Talk to Grow -->
+      <article class="project reveal">
+        <div class="card-head">
+          <span class="num">03</span>
+          <div>
+            <h2>Talk to Grow</h2>
+            <p class="tagline">Real-time audio → visual feedback prototype</p>
+          </div>
+        </div>
+
+        <div class="media-16x9">
+          <video controls preload="metadata" poster="assets/talk-to-grow-poster.jpg">
+            <source src="assets/talk-to-grow.mp4" type="video/mp4" />
+            Your browser doesn't support embedded video — <a href="assets/talk-to-grow.mp4">open the recording</a>.
+          </video>
+        </div>
+
+        <p class="desc">A real-time prototype mapping audio input to visual states — speaking duration, pitch, and loudness drive how a tree blooms and grows, built to make invisible input visible through code.</p>
+
+        <div class="tags">
+          <span class="tag-chip">React</span>
+          <span class="tag-chip">Web Audio API</span>
+          <span class="tag-chip">Vercel</span>
+        </div>
+
+        <div class="btns">
+          <a class="btn" href="https://audio-visualization-challenge-2.vercel.app/" target="_blank" rel="noopener">Live demo ↗</a>
+          <a class="btn" href="https://github.com/Qiqicoder/audio-visualization-challenge-2" target="_blank" rel="noopener">GitHub ↗</a>
+        </div>
+      </article>
+
+      <!-- 04. WuXing City -->
+      <article class="project reveal">
+        <div class="card-head">
+          <span class="num">04</span>
+          <div>
+            <h2>WuXing City</h2>
+            <p class="tagline">AI-native identity system · Gemini API</p>
+          </div>
+        </div>
+
+        <div class="media-16x9">
+          <iframe src="https://www.youtube.com/embed/mQqcWR0DdOg" title="WuXing City walkthrough" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+
+        <p class="desc">A three-day AI-native product that turns birth data into a Five Elements profile, radar chart, and playable 2D pixel city — built end-to-end with React and the Gemini API.</p>
+
+        <div class="tags">
+          <span class="tag-chip">React</span>
+          <span class="tag-chip">Gemini API</span>
+          <span class="tag-chip">Vercel</span>
+        </div>
+
+        <div class="btns">
+          <a class="btn" href="https://wuxing-city.vercel.app/" target="_blank" rel="noopener">Live demo ↗</a>
+          <a class="btn" href="https://github.com/Qiqicoder/Wuxing-City" target="_blank" rel="noopener">GitHub ↗</a>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="row">
+      <span><b style="color:var(--ink);font-family:var(--mono);">Ziying Qi</b></span>
+      <span>ziyingqi77@gmail.com</span>
+      <a href="https://github.com/Qiqicoder" target="_blank" rel="noopener">github.com/Qiqicoder</a>
+      <span class="ph">résumé link — not yet added</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    var els = document.querySelectorAll('.reveal');
+    if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      els.forEach(function(e){e.classList.add('in');});
+      return;
+    }
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target);}
+      });
+    },{threshold:.1});
+    els.forEach(function(e){io.observe(e);});
+  })();
+</script>
+</body>
+</html>

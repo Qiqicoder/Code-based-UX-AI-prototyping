@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reply — Three Modes, Three Variants Each</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: #F5F5F7;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", system-ui, sans-serif;
+    color: #1D1D1F;
+    -webkit-font-smoothing: antialiased;
+    overflow: hidden;
+  }
+  body {
+    display: flex; align-items: center; justify-content: center; padding: 24px;
+  }
+  .container {
+    width: 100%; max-width: 620px;
+    display: flex; flex-direction: column;
+    gap: 28px;
+  }
+
+  /* Incoming message bubble */
+  .message {
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: #D85A30; color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 500;
+    flex-shrink: 0;
+  }
+  .bubble {
+    background: white;
+    border-radius: 14px;
+    padding: 12px 16px;
+    max-width: 480px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .sender {
+    font-size: 12px; color: #86868B; margin-bottom: 4px;
+    font-weight: 500;
+  }
+  .bubble-content {
+    font-size: 14px; line-height: 1.55; color: #1D1D1F;
+  }
+  .attachment {
+    margin-top: 8px;
+    display: inline-flex; align-items: center; gap: 6px;
+    background: #F2F2F4;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    color: #515154;
+  }
+
+  /* Input area */
+  .input-wrapper {
+    position: relative;
+    width: 100%;
+  }
+
+  /* Soft static halo — no rotation */
+  .halo {
+    position: absolute;
+    inset: -10px;
+    border-radius: 32px;
+    background: conic-gradient(from 130deg,
+      #FF3B7A 0%,
+      #FF8A3D 15%,
+      #FFC83D 30%,
+      #65D96A 45%,
+      #3DB9FF 60%,
+      #8A5BFF 75%,
+      #FF3DD2 90%,
+      #FF3B7A 100%);
+    filter: blur(22px);
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .halo.show {
+    opacity: 0.7;
+    animation: breathe 3s ease-in-out infinite;
+  }
+  @keyframes breathe {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 0.8; }
+  }
+
+  /* Input box */
+  .input-box {
+    position: relative;
+    background: white;
+    border: 1px solid #E5E5E7;
+    border-radius: 20px;
+    padding: 20px 24px 28px 24px;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    z-index: 1;
+    transition: border-color 0.4s ease, box-shadow 0.4s ease, min-height 0.3s ease;
+  }
+  .input-box.active {
+    border-color: transparent;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  }
+  .input-text {
+    flex: 1;
+    font-size: 16px;
+    line-height: 1.6;
+    color: #1D1D1F;
+    outline: none;
+    min-height: 24px;
+    word-break: break-word;
+    white-space: pre-wrap;
+    caret-color: #1D1D1F;
+  }
+  .input-text:empty::before {
+    content: attr(data-placeholder);
+    color: #C7C7CC;
+    pointer-events: none;
+  }
+
+  /* Shimmer text effect */
+  .input-text.shimmer {
+    background: linear-gradient(
+      90deg,
+      #C7C7CC 0%, #C7C7CC 35%,
+      #1D1D1F 50%,
+      #C7C7CC 65%, #C7C7CC 100%
+    );
+    background-size: 250% 100%;
+    -webkit-background-clip: text;
+            background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 1.6s linear infinite;
+  }
+  @keyframes shimmer {
+    0%   { background-position: 250% 0; }
+    100% { background-position: -150% 0; }
+  }
+
+  /* Pagination inside the input box (bottom right) */
+  .pagination-inside {
+    position: absolute;
+    bottom: 10px;
+    right: 16px;
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  .pagination-inside.show { opacity: 1; }
+  .page-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #D2D2D7;
+    transition: background 0.25s, transform 0.25s;
+  }
+  .page-dot.active {
+    background: #1D1D1F;
+    transform: scale(1.25);
+  }
+  .page-count {
+    font-size: 10px;
+    color: #86868B;
+    margin-left: 4px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Hint row */
+  .hint {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    min-height: 22px;
+    flex-wrap: wrap;
+  }
+  .hint span {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; color: #86868B;
+  }
+  .hint kbd {
+    background: white;
+    border: 1px solid #D2D2D7;
+    border-bottom-width: 1.5px;
+    border-radius: 5px;
+    padding: 2px 7px;
+    font-family: -apple-system, "SF Mono", monospace;
+    font-size: 11px;
+    color: #1D1D1F;
+    min-width: 18px;
+    text-align: center;
+  }
+  .hint .kbd-pair {
+    display: inline-flex;
+    gap: 2px;
+  }
+
+  /* Reset button */
+  .reset {
+    position: fixed;
+    top: 20px; right: 24px;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 12px;
+    color: #86868B;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .reset:hover { color: #1D1D1F; }
+
+  /* Try-this hint */
+  .try-this {
+    position: fixed;
+    bottom: 20px; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(29, 29, 31, 0.9);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    color: white;
+    padding: 12px 18px;
+    border-radius: 10px;
+    font-size: 12px;
+    line-height: 1.65;
+    display: flex; flex-direction: column; gap: 4px;
+    transition: opacity 0.4s, transform 0.4s;
+    max-width: 460px;
+  }
+  .try-this strong { color: #FFC83D; font-weight: 500; }
+  .try-this code {
+    background: rgba(255,255,255,0.15);
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-family: "SF Mono", monospace;
+    font-size: 11px;
+  }
+  .try-this kbd {
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-family: inherit;
+    font-size: 10px;
+  }
+  .try-this.hide {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<button class="reset" onclick="resetDemo()">reset</button>
+
+<div class="container">
+  <!-- Incoming message context -->
+  <div class="message">
+    <div class="avatar">B</div>
+    <div class="bubble">
+      <div class="sender">Bei</div>
+      <div class="bubble-content">Ziying，Q3 财报草稿你帮我看下 — 第 3 页那块数据想听听你的想法。</div>
+      <div class="attachment">📎 Q3-financials.pdf · 2.4 MB</div>
+    </div>
+  </div>
+
+  <!-- Input with halo -->
+  <div class="input-wrapper">
+    <div class="halo" id="halo"></div>
+    <div class="input-box" id="box">
+      <div
+        class="input-text"
+        id="text"
+        data-placeholder="Reply to Bei…"
+        contenteditable="true"
+      ></div>
+      <!-- Pagination lives INSIDE the box, bottom right -->
+      <div class="pagination-inside" id="pagination">
+        <div class="page-dot active"></div>
+        <div class="page-dot"></div>
+        <div class="page-dot"></div>
+        <span class="page-count" id="page-count">1 / 3</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Keyboard hints -->
+  <div class="hint" id="hint"></div>
+</div>
+
+<!-- Initial instruction overlay -->
+<div class="try-this" id="try-this">
+  <div><strong>Mode 1 · Direct</strong> 输入框留空 → <kbd>⌥⌥</kbd> 双击 → 3 个草稿</div>
+  <div><strong>Mode 2 · Polish</strong> 打 <code>好的我看下</code> → <kbd>⌥⌥</kbd> 双击 → 3 种润色思路</div>
+  <div><strong>Mode 3 · Talk to AI</strong> <kbd>⌥</kbd> 单击 → 打指令 → <kbd>⌥⌥</kbd> 双击 → 3 种思考角度</div>
+</div>
+
+<script>
+'use strict';
+
+// === STATE ===
+const state = {
+  mode: 'idle',
+  // Two independent text buffers
+  buffers: {
+    reply: '',   // what you'd type to Bei (idle mode)
+    ai: ''       // what you'd type to AI (ai-mode)
+  },
+  // Demo data — 3 variants per mode
+  freshDrafts: [
+    '看了一眼 PDF，第 3 页的渠道数据可能要再拆一层。下午聊？',
+    '好嘞～周末看完反馈给你 👀',
+    '今晚抽时间过一遍，重点想听渠道维度还是 YoY 对比？'
+  ],
+  polishedResults: [
+    '收到，今晚看完反馈给你 — 主要从渠道维度切入吗？',
+    '收到，今晚过一遍。',
+    '好的，今晚抽时间看下。第 3 页之外有想我重点看的点吗？'
+  ],
+  instructionResults: [
+`看了 Q3 财报，第 3 页有几点想法：
+
+• 渠道贡献度的呈现单薄了 — 建议拆出"老客户复购 vs 新客户首购"的占比，比单纯渠道维度更能看出 Q3 增长的质量。
+
+• 同比图表只放了金额，缺转化率/客单价。这两个指标 Q3 应该有明显波动，值得单独拎出来对比。
+
+• 第 3 页脚注提到"季节性调整"，没说用了什么方法。要给董事会看的话，这块要补一句口径。
+
+要不要我整理成评审 comment 直接发回去？`,
+`看了第 3 页，主要想法：
+
+• Q3 增长曲线在 8 月有个明显的 plateau，但叙述里没点出来 — 隐藏了一个值得讨论的拐点。
+
+• 渠道数据虽然全，但缺一个"哪个渠道 Q4 应该加大投入"的判断。董事会通常会问这个。
+
+• 数字呈现偏防御性 — 如果想让 Q3 成绩说话，第 3 页可以再 push 一点。
+
+要不要约 30 分钟过一遍叙事框架？`,
+`看了第 3 页，几个担心点：
+
+• 新客户首购 vs 复购拆得不清楚，董事会会问"增长质量"这件事。
+
+• 季节性调整方法没披露，审计如果细抠是个 hole。
+
+• 渠道贡献只看了 GMV，没看 CAC，单看 GMV 容易乐观。
+
+要不要我帮你过一遍，提前堵这几个口？`
+  ],
+  draftIndex: 0,
+  timers: []
+};
+
+// === DOM ===
+const $halo = document.getElementById('halo');
+const $box = document.getElementById('box');
+const $text = document.getElementById('text');
+const $hint = document.getElementById('hint');
+const $pagination = document.getElementById('pagination');
+const $pageCount = document.getElementById('page-count');
+const $pageDots = document.querySelectorAll('.page-dot');
+const $tryThis = document.getElementById('try-this');
+
+// === HELPERS ===
+function clearTimers() {
+  state.timers.forEach(clearTimeout);
+  state.timers = [];
+}
+
+function saveCurrentBuffer() {
+  if (state.mode === 'idle') {
+    state.buffers.reply = $text.textContent;
+  } else if (state.mode === 'ai-mode') {
+    state.buffers.ai = $text.textContent;
+  }
+}
+
+function loadBuffer(modeName) {
+  if (modeName === 'idle') {
+    $text.textContent = state.buffers.reply;
+  } else if (modeName === 'ai-mode') {
+    $text.textContent = state.buffers.ai;
+  }
+}
+
+function updatePagination(idx) {
+  $pageDots.forEach((d, i) => {
+    d.classList.toggle('active', i === idx);
+  });
+  $pageCount.textContent = `${idx + 1} / 3`;
+}
+
+// Returns the results array for the current complete state, or null
+function currentResults() {
+  if (state.mode === 'complete-fresh') return state.freshDrafts;
+  if (state.mode === 'complete-polish') return state.polishedResults;
+  if (state.mode === 'complete-from-instruction') return state.instructionResults;
+  return null;
+}
+
+// === STATE TRANSITIONS ===
+function setState(newMode) {
+  clearTimers();
+  state.mode = newMode;
+
+  // Reset visuals
+  $halo.classList.remove('show');
+  $box.classList.remove('active');
+  $text.classList.remove('shimmer');
+  $pagination.classList.remove('show');
+  $text.contentEditable = 'false';
+
+  if (newMode !== 'idle') $tryThis.classList.add('hide');
+
+  if (newMode === 'idle') {
+    loadBuffer('idle');
+    $text.dataset.placeholder = 'Reply to Bei…';
+    $hint.innerHTML =
+      '<span><span class="kbd-pair"><kbd>⌥</kbd><kbd>⌥</kbd></span> generate or polish</span>' +
+      '<span><kbd>⌥</kbd> talk to Reply</span>';
+    $text.contentEditable = 'true';
+    setTimeout(() => $text.focus(), 50);
+    return;
+  }
+
+  if (newMode === 'ai-mode') {
+    loadBuffer('ai');
+    $halo.classList.add('show');
+    $box.classList.add('active');
+    $text.dataset.placeholder = 'Tell Reply what to do…';
+    $hint.innerHTML =
+      '<span><span class="kbd-pair"><kbd>⌥</kbd><kbd>⌥</kbd></span> ask Reply</span>' +
+      '<span><kbd>⌥</kbd> close</span>';
+    $text.contentEditable = 'true';
+    setTimeout(() => $text.focus(), 50);
+    return;
+  }
+
+  if (newMode === 'generating-fresh') {
+    state.draftIndex = 0; // start fresh
+    $halo.classList.add('show');
+    $box.classList.add('active');
+    $text.classList.add('shimmer');
+    $text.textContent = '正在读取 Bei 的 PDF…';
+    $hint.innerHTML = '';
+    state.timers.push(setTimeout(() => {
+      if (state.mode === 'generating-fresh') $text.textContent = '学习你和 Bei 的过往语气…';
+    }, 1000));
+    state.timers.push(setTimeout(() => {
+      if (state.mode === 'generating-fresh') $text.textContent = '为你起草 3 种表达…';
+    }, 2000));
+    state.timers.push(setTimeout(() => {
+      if (state.mode === 'generating-fresh') setState('complete-fresh');
+    }, 3100));
+    return;
+  }
+
+  if (newMode === 'generating-polish') {
+    state.draftIndex = 0;
+    $halo.classList.add('show');
+    $box.classList.add('active');
+    $text.classList.add('shimmer');
+    $text.textContent = 'Polishing your draft…';
+    $hint.innerHTML = '';
+    state.timers.push(setTimeout(() => {
+      if (state.mode === 'generating-polish') $text.textContent = '生成 3 种润色思路…';
+    }, 1100));
+    state.timers.push(setTimeout(() => {
+      if (state.mode === 'generating-polish') setState('complete-polish');
+    }, 2400));
+    return;
+  }
+
+  if (newMode === 'generating-from-instruction') {
+    state.draftIndex = 0;
+    $halo.classList.add('show');
+    $box.classList.add('active');
+    $text.classList.add('shimmer');
+    $text.textContent = '正在仔细阅读 PDF…';
+    $hint.innerHTML = '';
+    state.timers.push(setTimeout(() => {
+      if (state.mode === 'generating-from-instruction') $text.textContent = '提炼 3 种深度角度…';
+    }, 1200));
+    state.timers.push(setTimeout(() => {
+      if (state.mode === 'generating-from-instruction') $text.textContent = '整理成 bullet points…';
+    }, 2400));
+    state.timers.push(setTimeout(() => {
+      if (state.mode === 'generating-from-instruction') setState('complete-from-instruction');
+    }, 3600));
+    return;
+  }
+
+  if (newMode === 'complete-fresh') {
+    $box.classList.add('active');
+    $text.textContent = state.freshDrafts[state.draftIndex];
+    $pagination.classList.add('show');
+    updatePagination(state.draftIndex);
+    $hint.innerHTML =
+      '<span><span class="kbd-pair"><kbd>←</kbd><kbd>→</kbd></span> swap</span>' +
+      '<span><kbd>⏎</kbd> send</span>' +
+      '<span><span class="kbd-pair"><kbd>⌥</kbd><kbd>⌥</kbd></span> regenerate</span>' +
+      '<span><kbd>esc</kbd> reset</span>';
+    return;
+  }
+
+  if (newMode === 'complete-polish') {
+    $box.classList.add('active');
+    $text.textContent = state.polishedResults[state.draftIndex];
+    $pagination.classList.add('show');
+    updatePagination(state.draftIndex);
+    $hint.innerHTML =
+      '<span><span class="kbd-pair"><kbd>←</kbd><kbd>→</kbd></span> swap</span>' +
+      '<span><kbd>⏎</kbd> send</span>' +
+      '<span><span class="kbd-pair"><kbd>⌥</kbd><kbd>⌥</kbd></span> re-polish</span>' +
+      '<span><kbd>esc</kbd> reset</span>';
+    return;
+  }
+
+  if (newMode === 'complete-from-instruction') {
+    $box.classList.add('active');
+    $text.textContent = state.instructionResults[state.draftIndex];
+    $pagination.classList.add('show');
+    updatePagination(state.draftIndex);
+    $hint.innerHTML =
+      '<span><span class="kbd-pair"><kbd>←</kbd><kbd>→</kbd></span> swap</span>' +
+      '<span><kbd>⏎</kbd> send</span>' +
+      '<span><kbd>⌥</kbd> refine instruction</span>' +
+      '<span><span class="kbd-pair"><kbd>⌥</kbd><kbd>⌥</kbd></span> regenerate</span>' +
+      '<span><kbd>esc</kbd> reset</span>';
+    return;
+  }
+
+  if (newMode === 'sent') {
+    $hint.innerHTML = '<span>sent ✓</span>';
+    state.timers.push(setTimeout(resetDemo, 1100));
+    return;
+  }
+}
+
+function resetDemo() {
+  clearTimers();
+  state.draftIndex = 0;
+  state.buffers.reply = '';
+  state.buffers.ai = '';
+  setState('idle');
+  $tryThis.classList.remove('hide');
+}
+
+function cycleDraft(dir) {
+  const results = currentResults();
+  if (!results) return;
+  state.draftIndex = (state.draftIndex + dir + 3) % 3;
+  $text.textContent = results[state.draftIndex];
+  updatePagination(state.draftIndex);
+}
+
+// === OPTION SINGLE/DOUBLE-CLICK HANDLING ===
+let optClicks = 0;
+let optTimer = null;
+const DBL_THRESHOLD = 280;
+
+function onOptionPress() {
+  optClicks += 1;
+  if (optTimer) clearTimeout(optTimer);
+  optTimer = setTimeout(() => {
+    const count = optClicks;
+    optClicks = 0;
+    optTimer = null;
+    if (count === 1) handleSingleOption();
+    else handleDoubleOption();
+  }, DBL_THRESHOLD);
+}
+
+function handleSingleOption() {
+  if (state.mode === 'idle') {
+    saveCurrentBuffer();
+    setState('ai-mode');
+    return;
+  }
+  if (state.mode === 'ai-mode') {
+    saveCurrentBuffer();
+    setState('idle');
+    return;
+  }
+  if (state.mode === 'complete-fresh' || state.mode === 'complete-polish') {
+    state.buffers.reply = '';
+    setState('idle');
+    return;
+  }
+  if (state.mode === 'complete-from-instruction') {
+    setState('ai-mode');
+    return;
+  }
+}
+
+function handleDoubleOption() {
+  if (state.mode === 'idle') {
+    saveCurrentBuffer();
+    const text = state.buffers.reply.trim();
+    if (text.length > 0) {
+      setState('generating-polish');
+    } else {
+      setState('generating-fresh');
+    }
+    return;
+  }
+  if (state.mode === 'ai-mode') {
+    saveCurrentBuffer();
+    const instruction = state.buffers.ai.trim();
+    if (instruction.length > 0) {
+      setState('generating-from-instruction');
+    }
+    return;
+  }
+  if (state.mode === 'complete-fresh') { setState('generating-fresh'); return; }
+  if (state.mode === 'complete-polish') { setState('generating-polish'); return; }
+  if (state.mode === 'complete-from-instruction') { setState('generating-from-instruction'); return; }
+}
+
+// === KEYBOARD ===
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Alt' && !e.repeat) {
+    e.preventDefault();
+    onOptionPress();
+    return;
+  }
+  if (e.key === 'Escape') {
+    e.preventDefault();
+    resetDemo();
+    return;
+  }
+  // ← → cycles drafts in ANY complete state
+  if (e.key === 'ArrowLeft' && state.mode.startsWith('complete-') && state.mode !== 'complete-sent') {
+    e.preventDefault();
+    cycleDraft(-1);
+    return;
+  }
+  if (e.key === 'ArrowRight' && state.mode.startsWith('complete-') && state.mode !== 'complete-sent') {
+    e.preventDefault();
+    cycleDraft(1);
+    return;
+  }
+  if (e.key === 'Enter') {
+    if (state.mode === 'idle' || state.mode === 'ai-mode') {
+      e.preventDefault();
+      return;
+    }
+    if (state.mode.startsWith('complete-')) {
+      e.preventDefault();
+      setState('sent');
+      return;
+    }
+  }
+});
+
+// Save user's edits to the right buffer
+$text.addEventListener('input', () => {
+  if (state.mode === 'idle') {
+    state.buffers.reply = $text.textContent;
+  } else if (state.mode === 'ai-mode') {
+    state.buffers.ai = $text.textContent;
+  }
+});
+
+// === INIT ===
+resetDemo();
+</script>
+</body>
+</html>

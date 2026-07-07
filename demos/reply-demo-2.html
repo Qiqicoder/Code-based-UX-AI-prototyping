@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reply · Ambient Mode — 4 Scenarios</title>
+<style>
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    min-height: 100%;
+    background: #F5F5F7;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", "Helvetica Neue", system-ui, sans-serif;
+    color: #1D1D1F;
+    -webkit-font-smoothing: antialiased;
+  }
+  body { overflow-x: hidden; }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* === INDEX === */
+  #screen-index.active {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 64px 24px 80px;
+  }
+  .index-content { width: 100%; max-width: 760px; }
+  .index-eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: #D85A30;
+    margin-bottom: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+  .index-title {
+    font-size: 32px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    margin: 0 0 16px;
+    line-height: 1.2;
+  }
+  .index-tagline {
+    font-size: 15px;
+    color: #515154;
+    line-height: 1.6;
+    margin: 0 0 40px;
+    max-width: 560px;
+  }
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    margin-bottom: 40px;
+  }
+  .card {
+    background: white;
+    border: 0.5px solid #E5E5E7;
+    border-radius: 14px;
+    padding: 24px 22px;
+    color: inherit;
+    transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+    cursor: pointer;
+    display: flex; flex-direction: column; gap: 8px;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .card:hover, .card:focus-visible {
+    border-color: #D85A30;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+    outline: none;
+  }
+  .card-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: #86868B;
+    font-weight: 500;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .card-eyebrow.p0 { color: #D85A30; }
+  .card-title {
+    font-size: 17px;
+    font-weight: 500;
+  }
+  .card-desc {
+    font-size: 13px;
+    color: #515154;
+    line-height: 1.5;
+  }
+  .card-rationale {
+    font-size: 12px;
+    color: #86868B;
+    margin-top: 6px;
+    padding-top: 10px;
+    border-top: 0.5px solid #F0F0F2;
+    font-style: italic;
+  }
+  .index-footer {
+    background: white;
+    border: 0.5px solid #E5E5E7;
+    border-radius: 12px;
+    padding: 18px 22px;
+  }
+  .index-footer-title {
+    font-size: 12px;
+    color: #86868B;
+    margin-bottom: 10px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-weight: 500;
+  }
+  .index-footer-body {
+    font-size: 13px;
+    color: #1D1D1F;
+    line-height: 1.7;
+  }
+  .index-footer-body code {
+    background: #F2F2F4;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-family: "SF Mono", monospace;
+    font-size: 12px;
+  }
+
+  /* === SCENARIO === */
+  .scenario.active {
+    display: flex; flex-direction: column; align-items: center;
+    padding: 48px 24px;
+    min-height: 100vh;
+  }
+  .scenario-header {
+    width: 100%; max-width: 580px;
+    margin-bottom: 24px;
+  }
+  .scenario-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: #86868B;
+    text-transform: uppercase;
+    font-weight: 500;
+    margin-bottom: 6px;
+  }
+  .scenario-eyebrow strong {
+    color: #D85A30;
+    font-weight: 500;
+  }
+  .scenario-title {
+    font-size: 20px;
+    font-weight: 500;
+    margin: 0 0 6px;
+  }
+  .scenario-trigger {
+    font-size: 13px;
+    color: #86868B;
+  }
+  .scenario-trigger code {
+    background: #ECECEE;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-family: "SF Mono", monospace;
+    font-size: 12px;
+    color: #515154;
+  }
+
+  /* === CHAT WINDOW === */
+  .chat-window {
+    width: 100%; max-width: 580px;
+    background: white;
+    border: 0.5px solid #E5E5E7;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.04);
+  }
+  .chat-titlebar {
+    background: #FAFAFC;
+    border-bottom: 0.5px solid #E5E5E7;
+    padding: 10px 16px;
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px;
+    color: #86868B;
+  }
+  .traffic { display: flex; gap: 6px; margin-right: 8px; }
+  .traffic-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .traffic-dot.red { background: #FF5F57; }
+  .traffic-dot.yellow { background: #FEBC2E; }
+  .traffic-dot.green { background: #28C840; }
+  .chat-app-name { margin-left: auto; font-size: 11px; color: #C7C7CC; }
+  .chat-body { padding: 20px 16px 16px; min-height: 220px; }
+  .msg-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-start; }
+  .msg-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 12px; font-weight: 500; flex-shrink: 0;
+  }
+  .avatar-bei { background: #D85A30; }
+  .msg-bubble { background: #F2F2F4; border-radius: 14px; padding: 10px 14px; max-width: 380px; }
+  .msg-text { font-size: 14px; line-height: 1.5; color: #1D1D1F; }
+  .msg-time { font-size: 10px; color: #86868B; margin-top: 4px; }
+  .msg-attachment {
+    margin-top: 8px;
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(255,255,255,0.7);
+    padding: 6px 10px; border-radius: 8px;
+    font-size: 11px; color: #515154;
+  }
+  .urgent-tag {
+    display: inline-block;
+    background: #FFE6E2;
+    color: #D85A30;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+    margin-right: 6px;
+  }
+
+  /* === INPUT BOX === */
+  .input-wrap { padding: 12px 14px 14px; border-top: 0.5px solid #F0F0F2; }
+  .input-box {
+    position: relative;
+    background: white;
+    border: 1px solid #E5E5E7;
+    border-radius: 18px;
+    padding: 12px 16px;
+    min-height: 46px;
+    display: flex; align-items: center;
+    transition: background 0.5s ease, border-color 0.5s ease;
+    overflow: hidden;
+  }
+  .input-box.has-pill {
+    background: linear-gradient(135deg, #FFF5F0 0%, #FBF1FC 100%);
+    border-color: rgba(216, 90, 48, 0.25);
+  }
+  .placeholder { color: #C7C7CC; font-size: 14px; }
+  .typed-text { font-size: 14px; color: #1D1D1F; white-space: pre-wrap; }
+  .typed-text.ghost { color: #C7C7CC; }
+  .cursor {
+    display: inline-block; width: 1px; height: 14px;
+    background: #1D1D1F; margin-left: 1px;
+    animation: blink 1s infinite; vertical-align: middle;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* === PILL === */
+  .pill-content {
+    display: flex; align-items: center;
+    gap: 10px; width: 100%;
+    animation: pillIn 0.45s ease;
+    opacity: 1;
+    transition: opacity 2s ease-out;
+  }
+  @keyframes pillIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .pill-content.fading { opacity: 0; }
+  .pill-flower {
+    width: 18px; height: 18px; flex-shrink: 0;
+  }
+  .pill-flower svg { width: 100%; height: 100%; }
+  .pill-text { flex: 1; font-size: 14px; color: #1D1D1F; line-height: 1.4; }
+  .pill-text strong { font-weight: 500; }
+  .pill-buttons { display: flex; gap: 4px; flex-shrink: 0; }
+  .pill-btn {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: none; background: transparent;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    transition: background 0.2s;
+    color: #515154;
+    padding: 0;
+  }
+  .pill-btn:hover { background: rgba(0,0,0,0.06); }
+  .pill-btn.accept { color: #1D1D1F; }
+  .pill-btn-icon { width: 14px; height: 14px; }
+
+  /* Shimmer text */
+  .shimmer {
+    background: linear-gradient(90deg, #C7C7CC 0%, #C7C7CC 35%, #1D1D1F 50%, #C7C7CC 65%, #C7C7CC 100%);
+    background-size: 250% 100%;
+    -webkit-background-clip: text;
+            background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 1.6s linear infinite;
+    font-size: 14px;
+  }
+  @keyframes shimmer {
+    0% { background-position: 250% 0; }
+    100% { background-position: -150% 0; }
+  }
+
+  .pill-content.success .pill-text { color: #2E7D33; }
+
+  /* === RECALL FLOWER === */
+  .recall-icon {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px; height: 18px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    padding: 0;
+    opacity: 0;
+    transition: opacity 0.6s ease, transform 0.2s ease;
+  }
+  .recall-icon.show { opacity: 0.4; }
+  .recall-icon:hover { opacity: 0.85; transform: translateY(-50%) scale(1.1); }
+  .recall-icon svg { width: 100%; height: 100%; }
+
+  /* Pagination inside box */
+  .pagination-inside {
+    position: absolute;
+    bottom: 6px;
+    right: 14px;
+    display: flex; gap: 5px;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .pagination-inside.show { opacity: 1; }
+  .page-dot { width: 4px; height: 4px; border-radius: 50%; background: #D2D2D7; }
+  .page-dot.active { background: #1D1D1F; transform: scale(1.25); }
+  .page-count { font-size: 10px; color: #86868B; margin-left: 4px; }
+
+  /* === BACK === */
+  .back-btn {
+    position: fixed;
+    top: 20px; left: 20px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 0.5px solid rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: #515154;
+    cursor: pointer;
+    font-family: inherit;
+    display: none;
+    z-index: 100;
+  }
+  .back-btn:hover { color: #1D1D1F; }
+  body.in-scenario .back-btn { display: block; }
+
+  .replay-btn {
+    margin-top: 20px;
+    background: transparent;
+    border: 0.5px solid #D2D2D7;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 12px;
+    color: #86868B;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .replay-btn:hover { color: #1D1D1F; border-color: #86868B; }
+
+  .hint-below {
+    margin-top: 16px;
+    font-size: 12px;
+    color: #86868B;
+    text-align: center;
+    max-width: 580px;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="navigate('index')">← scenarios</button>
+
+<!-- ========== INDEX ========== -->
+<div id="screen-index" class="screen active">
+  <div class="index-content">
+    <div class="index-eyebrow">Reply · Ambient Mode</div>
+    <h1 class="index-title">AI 主动出现的四种感知</h1>
+    <p class="index-tagline">
+      不需要快捷键唤起。AI 因为聊天内容自然询问 — 但每种感知都有自己的<strong>出场理由</strong>，这套设计保证 ambient hint 不变成 Clippy。
+    </p>
+
+    <div class="cards">
+      <div class="card" onclick="navigate('calendar')" tabindex="0" role="button" onkeydown="if(event.key==='Enter')navigate('calendar')">
+        <div class="card-eyebrow p0">意图感知 · P0</div>
+        <div class="card-title">加日历</div>
+        <div class="card-desc">对方消息含明确时间词</div>
+        <div class="card-rationale">Tanka 已证明可行 — 一键完成、几乎肯定有用</div>
+      </div>
+      <div class="card" onclick="navigate('owed')" tabindex="0" role="button" onkeydown="if(event.key==='Enter')navigate('owed')">
+        <div class="card-eyebrow p0">关系感知 · P0</div>
+        <div class="card-title">起草欠回复</div>
+        <div class="card-desc">你欠对方 ≥ 2 天没回</div>
+        <div class="card-rationale">直接接 Piper 的 owed 台账，只在真实积压时触发</div>
+      </div>
+      <div class="card" onclick="navigate('urgent')" tabindex="0" role="button" onkeydown="if(event.key==='Enter')navigate('urgent')">
+        <div class="card-eyebrow">附件感知 · P1</div>
+        <div class="card-title">紧急附件</div>
+        <div class="card-desc">含"急" + 附件 (PDF / 文档 / 视频)</div>
+        <div class="card-rationale">紧急度解锁附件读取，平时不主动读 PDF</div>
+      </div>
+      <div class="card" onclick="navigate('stuck')" tabindex="0" role="button" onkeydown="if(event.key==='Enter')navigate('stuck')">
+        <div class="card-eyebrow">状态感知 · P2</div>
+        <div class="card-title">打字接力</div>
+        <div class="card-desc">打字停顿 ≥ 5 秒</div>
+        <div class="card-rationale">只在摩擦时刻出现，不每条消息出</div>
+      </div>
+    </div>
+
+    <div class="index-footer">
+      <div class="index-footer-title">Pill 四条纪律 — 任何一条不满足都不出现</div>
+      <div class="index-footer-body">
+        · 同一对话内 <code>5 分钟</code> 最多 1 个 pill<br>
+        · 你 dismiss 同类 pill <code>≥ 3 次</code> 自动 mute 一周<br>
+        · 你<strong>正在打字</strong>时不出现 (除状态感知补完场景)<br>
+        · 联系人信任度调阈值 (同事低 / 陌生人高)
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== 1: 意图感知 / CALENDAR ========== -->
+<div id="screen-calendar" class="screen scenario">
+  <div class="scenario-header">
+    <div class="scenario-eyebrow"><strong>意图感知</strong> · P0 · baseline</div>
+    <h2 class="scenario-title">加日历</h2>
+    <div class="scenario-trigger">触发: 对方消息含明确时间词 <code>下午 2 点</code></div>
+  </div>
+
+  <div class="chat-window">
+    <div class="chat-titlebar">
+      <div class="traffic"><span class="traffic-dot red"></span><span class="traffic-dot yellow"></span><span class="traffic-dot green"></span></div>
+      <div class="chat-app-name">Lark</div>
+    </div>
+    <div class="chat-body">
+      <div class="msg-row">
+        <div class="msg-avatar avatar-bei">B</div>
+        <div class="msg-bubble">
+          <div class="msg-text">Ziying，明天下午 2 点能不能对一下 Q3 的方向？</div>
+          <div class="msg-time">2 min ago</div>
+        </div>
+      </div>
+    </div>
+    <div class="input-wrap">
+      <div class="input-box" id="box-calendar">
+        <span class="placeholder">Reply to Bei…</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hint-below">
+    Pill 在 2.5 秒后浮现 (留时间读消息) · 8 秒后自动淡出 · 软消失后右侧留一个小花，点它可以重看
+  </div>
+
+  <button class="replay-btn" onclick="initCalendar()">replay</button>
+</div>
+
+<!-- ========== 2: 关系感知 / OWED ========== -->
+<div id="screen-owed" class="screen scenario">
+  <div class="scenario-header">
+    <div class="scenario-eyebrow"><strong>关系感知</strong> · P0 · 接 Piper owed 台账</div>
+    <h2 class="scenario-title">起草欠回复</h2>
+    <div class="scenario-trigger">触发: 你欠对方 <code>≥ 2 天</code> 没回</div>
+  </div>
+
+  <div class="chat-window">
+    <div class="chat-titlebar">
+      <div class="traffic"><span class="traffic-dot red"></span><span class="traffic-dot yellow"></span><span class="traffic-dot green"></span></div>
+      <div class="chat-app-name">Lark</div>
+    </div>
+    <div class="chat-body">
+      <div class="msg-row">
+        <div class="msg-avatar avatar-bei">B</div>
+        <div class="msg-bubble">
+          <div class="msg-text">Ziying 看下这个，有空 ping 我～</div>
+          <div class="msg-time">3 days ago</div>
+        </div>
+      </div>
+    </div>
+    <div class="input-wrap">
+      <div class="input-box" id="box-owed">
+        <span class="placeholder">Reply to Bei…</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hint-below">
+    接受后直接进入起草 — pill 是入口，闭环回 v4 的回复流
+  </div>
+
+  <button class="replay-btn" onclick="initOwed()">replay</button>
+</div>
+
+<!-- ========== 3: 附件感知 / URGENT ========== -->
+<div id="screen-urgent" class="screen scenario">
+  <div class="scenario-header">
+    <div class="scenario-eyebrow"><strong>附件感知</strong> · P1 · 紧急度解锁</div>
+    <h2 class="scenario-title">紧急附件</h2>
+    <div class="scenario-trigger">触发: 消息含 <code>急 / asap / deadline</code> + 附件</div>
+  </div>
+
+  <div class="chat-window">
+    <div class="chat-titlebar">
+      <div class="traffic"><span class="traffic-dot red"></span><span class="traffic-dot yellow"></span><span class="traffic-dot green"></span></div>
+      <div class="chat-app-name">Lark</div>
+    </div>
+    <div class="chat-body">
+      <div class="msg-row">
+        <div class="msg-avatar avatar-bei">B</div>
+        <div class="msg-bubble">
+          <div class="msg-text">
+            <span class="urgent-tag">急</span>这份 review 今晚 8 点前能反馈我吗？
+          </div>
+          <div class="msg-attachment">📎 Q3-review-draft.pdf · 1.8 MB</div>
+          <div class="msg-time">12 min ago</div>
+        </div>
+      </div>
+    </div>
+    <div class="input-wrap">
+      <div class="input-box" id="box-urgent">
+        <span class="placeholder">Reply to Bei…</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hint-below">
+    普通 PDF 不主动读 (省 token) · "急" + 附件 才解锁主动读取
+  </div>
+
+  <button class="replay-btn" onclick="initUrgent()">replay</button>
+</div>
+
+<!-- ========== 4: 状态感知 / STUCK ========== -->
+<div id="screen-stuck" class="screen scenario">
+  <div class="scenario-header">
+    <div class="scenario-eyebrow"><strong>状态感知</strong> · P2 · 时机敏感</div>
+    <h2 class="scenario-title">打字接力</h2>
+    <div class="scenario-trigger">触发: 用户打字停顿 <code>≥ 5 秒</code></div>
+  </div>
+
+  <div class="chat-window">
+    <div class="chat-titlebar">
+      <div class="traffic"><span class="traffic-dot red"></span><span class="traffic-dot yellow"></span><span class="traffic-dot green"></span></div>
+      <div class="chat-app-name">Lark</div>
+    </div>
+    <div class="chat-body">
+      <div class="msg-row">
+        <div class="msg-avatar avatar-bei">B</div>
+        <div class="msg-bubble">
+          <div class="msg-text">明天的会要不要把 Emily 也叫上？她想了解一下渠道这块的数据。</div>
+          <div class="msg-time">5 min ago</div>
+        </div>
+      </div>
+    </div>
+    <div class="input-wrap">
+      <div class="input-box" id="box-stuck">
+        <span class="placeholder">Reply to Bei…</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="hint-below">
+    Demo 会自动模拟: 读消息 → 你打字 → 卡住 → pill 出现
+  </div>
+
+  <button class="replay-btn" onclick="initStuck()">replay</button>
+</div>
+
+<script>
+'use strict';
+
+// === FLOWER SVG ===
+const flowerSVG = `
+<svg viewBox="0 0 32 32">
+  <circle cx="16" cy="8" r="6" fill="#FF3B7A" opacity="0.85"/>
+  <circle cx="22.9" cy="12" r="6" fill="#FF8A3D" opacity="0.85"/>
+  <circle cx="22.9" cy="20" r="6" fill="#FFC83D" opacity="0.85"/>
+  <circle cx="16" cy="24" r="6" fill="#65D96A" opacity="0.85"/>
+  <circle cx="9.1" cy="20" r="6" fill="#3DB9FF" opacity="0.85"/>
+  <circle cx="9.1" cy="12" r="6" fill="#8A5BFF" opacity="0.85"/>
+  <circle cx="16" cy="16" r="3.5" fill="#FFFFFF" opacity="0.7"/>
+</svg>`;
+
+// === TIMERS ===
+let activeTimers = [];
+function clearTimers() {
+  activeTimers.forEach(clearTimeout);
+  activeTimers = [];
+}
+function later(fn, ms) {
+  const id = setTimeout(fn, ms);
+  activeTimers.push(id);
+  return id;
+}
+
+// === PILL CONFIG STORAGE (for recall) ===
+const lastPillConfig = {};
+
+// === NAVIGATION (no URL hash — works in Lark embed) ===
+function navigate(target) {
+  clearTimers();
+  const screens = ['index', 'calendar', 'owed', 'urgent', 'stuck'];
+  if (!screens.includes(target)) target = 'index';
+
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + target).classList.add('active');
+  document.body.classList.toggle('in-scenario', target !== 'index');
+
+  if (target === 'calendar') initCalendar();
+  else if (target === 'owed') initOwed();
+  else if (target === 'urgent') initUrgent();
+  else if (target === 'stuck') initStuck();
+
+  window.scrollTo(0, 0);
+}
+
+// === PILL RENDER ===
+function renderPill(boxId, opts) {
+  // opts: { text, accept, suppressRecallOnFade }
+  lastPillConfig[boxId] = opts;
+
+  const box = document.getElementById(boxId);
+  box.classList.add('has-pill');
+  box.innerHTML = `
+    <div class="pill-content" id="${boxId}-pill">
+      <div class="pill-flower">${flowerSVG}</div>
+      <div class="pill-text">${opts.text}</div>
+      <div class="pill-buttons">
+        <button class="pill-btn accept" data-action="accept" aria-label="accept">
+          <svg class="pill-btn-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8 6.5 11.5 13 5"/></svg>
+        </button>
+        <button class="pill-btn dismiss" data-action="dismiss" aria-label="dismiss">
+          <svg class="pill-btn-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+  `;
+
+  const pillEl = document.getElementById(`${boxId}-pill`);
+
+  // Timing: 6s full opacity, then 2s gentle fade → 8s total
+  const FADE_START_MS = 6000;
+  const TOTAL_LIFETIME_MS = 8000;
+
+  // Trigger gentle opacity fade
+  const fadeTimer = later(() => {
+    if (pillEl && pillEl.parentNode) pillEl.classList.add('fading');
+  }, FADE_START_MS);
+
+  // Auto-dismiss = "soft" → show recall icon
+  const dismissTimer = later(() => {
+    softDismiss(boxId);
+  }, TOTAL_LIFETIME_MS);
+
+  // Hover pauses the fade (cancels both timers, brings back to full)
+  pillEl.addEventListener('mouseenter', () => {
+    clearTimeout(fadeTimer);
+    clearTimeout(dismissTimer);
+    pillEl.classList.remove('fading');
+  });
+
+  // Button handlers
+  pillEl.querySelector('[data-action="accept"]').addEventListener('click', (e) => {
+    e.stopPropagation();
+    clearTimeout(fadeTimer);
+    clearTimeout(dismissTimer);
+    if (opts.accept) opts.accept();
+  });
+  pillEl.querySelector('[data-action="dismiss"]').addEventListener('click', (e) => {
+    e.stopPropagation();
+    clearTimeout(fadeTimer);
+    clearTimeout(dismissTimer);
+    hardDismiss(boxId); // explicit X → no recall
+  });
+
+  // Click on box (not on buttons) = soft dismiss with recall
+  box.addEventListener('click', function onBoxClick(e) {
+    if (e.target.closest('.pill-btn')) return;
+    if (e.target.closest('.pill-content') === null) return; // only if click is on/around pill
+    clearTimeout(fadeTimer);
+    clearTimeout(dismissTimer);
+    box.removeEventListener('click', onBoxClick);
+    // treat as soft (user might have meant to click but missed buttons)
+    softDismiss(boxId);
+  });
+}
+
+// Soft dismiss: pill goes away but flower stays as recall
+function softDismiss(boxId) {
+  const pillEl = document.getElementById(`${boxId}-pill`);
+  if (pillEl) pillEl.classList.add('fading');
+  later(() => {
+    const box = document.getElementById(boxId);
+    if (!box) return;
+    box.classList.remove('has-pill');
+    box.innerHTML = `
+      <span class="placeholder">Reply to Bei…</span>
+      <button class="recall-icon" onclick="recallPill('${boxId}')" aria-label="Reply suggestion">
+        ${flowerSVG}
+      </button>
+    `;
+    later(() => {
+      const recall = box.querySelector('.recall-icon');
+      if (recall) recall.classList.add('show');
+    }, 300);
+  }, 600);
+}
+
+// Hard dismiss: explicit X click → no recall
+function hardDismiss(boxId) {
+  const pillEl = document.getElementById(`${boxId}-pill`);
+  if (pillEl) pillEl.classList.add('fading');
+  later(() => {
+    const box = document.getElementById(boxId);
+    if (!box) return;
+    box.classList.remove('has-pill');
+    box.innerHTML = '<span class="placeholder">Reply to Bei…</span>';
+  }, 600);
+}
+
+// Recall: bring back the same pill
+function recallPill(boxId) {
+  const opts = lastPillConfig[boxId];
+  if (opts) renderPill(boxId, opts);
+}
+
+// === SCENARIO 1: CALENDAR ===
+function initCalendar() {
+  resetBox('box-calendar');
+  later(() => {
+    renderPill('box-calendar', {
+      text: '<strong>Bei 在约下午 2 点</strong> — 加到日历?',
+      accept: () => {
+        const box = document.getElementById('box-calendar');
+        box.innerHTML = `
+          <div class="pill-content success">
+            <div class="pill-flower">${flowerSVG}</div>
+            <div class="pill-text">✓ 已加到日历 · Tue 2pm · Q3 方向同步 (with Bei)</div>
+          </div>
+        `;
+        later(() => resetBox('box-calendar'), 2400);
+      }
+    });
+  }, 2500);
+}
+
+// === SCENARIO 2: OWED ===
+function initOwed() {
+  resetBox('box-owed');
+  later(() => {
+    renderPill('box-owed', {
+      text: '<strong>Bei 等你 3 天</strong> — 帮你起草一个?',
+      accept: () => {
+        const box = document.getElementById('box-owed');
+        box.innerHTML = `
+          <div class="pill-content">
+            <div class="pill-flower">${flowerSVG}</div>
+            <div class="pill-text shimmer">起草中…</div>
+          </div>
+        `;
+        later(() => {
+          box.classList.remove('has-pill');
+          box.innerHTML = `
+            <span class="typed-text">不好意思晚回了 — 在赶一个 deadline。这个我看到了，明天上午给你具体反馈，方便吗？</span>
+            <div class="pagination-inside show">
+              <div class="page-dot active"></div>
+              <div class="page-dot"></div>
+              <div class="page-dot"></div>
+              <span class="page-count">1 / 3</span>
+            </div>
+          `;
+        }, 1700);
+      }
+    });
+  }, 2500);
+}
+
+// === SCENARIO 3: URGENT ===
+function initUrgent() {
+  resetBox('box-urgent');
+  later(() => {
+    renderPill('box-urgent', {
+      text: '<strong>"急" + PDF</strong> — 帮你读完起草?',
+      accept: () => {
+        const box = document.getElementById('box-urgent');
+        box.innerHTML = `
+          <div class="pill-content">
+            <div class="pill-flower">${flowerSVG}</div>
+            <div class="pill-text shimmer">正在读 Q3-review-draft.pdf…</div>
+          </div>
+        `;
+        later(() => {
+          box.innerHTML = `
+            <div class="pill-content">
+              <div class="pill-flower">${flowerSVG}</div>
+              <div class="pill-text shimmer">基于 PDF 起草中…</div>
+            </div>
+          `;
+        }, 1500);
+        later(() => {
+          box.classList.remove('has-pill');
+          box.innerHTML = `
+            <span class="typed-text">看完了，主要有两点想 push back：第 3 页渠道拆分还差一层，第 5 页脚注口径要补。8 点前给你完整版。</span>
+            <div class="pagination-inside show">
+              <div class="page-dot active"></div>
+              <div class="page-dot"></div>
+              <div class="page-dot"></div>
+              <span class="page-count">1 / 3</span>
+            </div>
+          `;
+        }, 3000);
+      }
+    });
+  }, 2500);
+}
+
+// === SCENARIO 4: STUCK ===
+function initStuck() {
+  const box = document.getElementById('box-stuck');
+  box.classList.remove('has-pill');
+  box.innerHTML = '<span class="placeholder">Reply to Bei…</span>';
+
+  // Wait 2s for user to read message, then start typing
+  later(() => {
+    box.innerHTML = '<span class="typed-text" id="stuck-typed"></span><span class="cursor"></span>';
+    const target = '好的，那我把 Emily';
+    let i = 0;
+    const typedEl = document.getElementById('stuck-typed');
+
+    function typeChar() {
+      if (i < target.length) {
+        typedEl.textContent += target[i];
+        i++;
+        later(typeChar, 110 + Math.random() * 100);
+      } else {
+        // stopped — show pill after 3s pause
+        later(showStuckPill, 3000);
+      }
+    }
+    typeChar();
+  }, 2000);
+}
+
+function showStuckPill() {
+  const box = document.getElementById('box-stuck');
+  const typedEl = document.getElementById('stuck-typed');
+  const existingText = typedEl ? typedEl.textContent : '';
+
+  // Save recall config for stuck mode too
+  lastPillConfig['box-stuck'] = { type: 'stuck', existingText };
+
+  box.classList.add('has-pill');
+  box.innerHTML = `
+    <span class="typed-text">${existingText}</span>
+    <div class="pill-content" id="box-stuck-pill" style="margin-left: 8px;">
+      <div class="pill-flower">${flowerSVG}</div>
+      <div class="pill-text">需要 <strong>Reply</strong> 帮你接下去?</div>
+      <div class="pill-buttons">
+        <button class="pill-btn accept" onclick="acceptStuck()" aria-label="accept">
+          <svg class="pill-btn-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 8 6.5 11.5 13 5"/></svg>
+        </button>
+        <button class="pill-btn dismiss" onclick="hardDismissStuck()" aria-label="dismiss">
+          <svg class="pill-btn-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="4" x2="12" y2="12"/><line x1="12" y1="4" x2="4" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+  `;
+
+  const pillEl = document.getElementById('box-stuck-pill');
+
+  const fadeTimer = later(() => {
+    if (pillEl && pillEl.parentNode) pillEl.classList.add('fading');
+  }, 6000);
+
+  const dismissTimer = later(() => {
+    softDismissStuck();
+  }, 8000);
+
+  pillEl.addEventListener('mouseenter', () => {
+    clearTimeout(fadeTimer);
+    clearTimeout(dismissTimer);
+    pillEl.classList.remove('fading');
+  });
+}
+
+function acceptStuck() {
+  const box = document.getElementById('box-stuck');
+  const existingText = '好的，那我把 Emily';
+  const pillEl = document.getElementById('box-stuck-pill');
+  if (pillEl) pillEl.remove();
+
+  box.classList.remove('has-pill');
+  box.innerHTML = `<span class="typed-text">${existingText}</span><span class="typed-text ghost" id="stuck-ghost"></span><span class="cursor"></span>`;
+  const ghost = document.getElementById('stuck-ghost');
+  const continuation = ' 也拉进来。她对渠道数据熟，应该会有想法。明天 2 点见？';
+  let i = 0;
+
+  function ghostType() {
+    if (i < continuation.length) {
+      ghost.textContent += continuation[i];
+      i++;
+      later(ghostType, 35 + Math.random() * 40);
+    } else {
+      later(() => ghost.classList.remove('ghost'), 300);
+    }
+  }
+  ghostType();
+}
+
+function softDismissStuck() {
+  const pillEl = document.getElementById('box-stuck-pill');
+  if (pillEl) pillEl.classList.add('fading');
+  later(() => {
+    const box = document.getElementById('box-stuck');
+    const existingText = '好的，那我把 Emily';
+    box.classList.remove('has-pill');
+    box.innerHTML = `
+      <span class="typed-text">${existingText}</span>
+      <span class="cursor"></span>
+      <button class="recall-icon" onclick="recallStuck()" aria-label="Reply suggestion">
+        ${flowerSVG}
+      </button>
+    `;
+    later(() => {
+      const recall = document.querySelector('#box-stuck .recall-icon');
+      if (recall) recall.classList.add('show');
+    }, 300);
+  }, 600);
+}
+
+function hardDismissStuck() {
+  const pillEl = document.getElementById('box-stuck-pill');
+  if (pillEl) pillEl.classList.add('fading');
+  later(() => {
+    const box = document.getElementById('box-stuck');
+    const existingText = '好的，那我把 Emily';
+    box.classList.remove('has-pill');
+    box.innerHTML = `<span class="typed-text">${existingText}</span><span class="cursor"></span>`;
+  }, 600);
+}
+
+function recallStuck() {
+  showStuckPill();
+}
+
+// === HELPERS ===
+function resetBox(boxId) {
+  const box = document.getElementById(boxId);
+  box.classList.remove('has-pill');
+  box.innerHTML = '<span class="placeholder">Reply to Bei…</span>';
+}
+
+// === INIT ===
+navigate('index');
+</script>
+</body>
+</html>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SmartFormFields — rendered form example</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --paper:#FAFAFA;--surface:#FFFFFF;--ink:#16181C;--body:#31353C;--muted:#666E78;
+    --hairline:#E4E6EA;--accent:#1B4D89;--accent-bright:#2E6BC6;
+    --sans:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--body);font-family:var(--sans);font-size:16px;line-height:1.6;}
+  .wrap{max-width:520px;margin:0 auto;padding:48px 24px 80px;}
+  .note{
+    font-family:var(--mono);font-size:.8rem;color:var(--muted);background:var(--surface);
+    border:1px solid var(--hairline);border-radius:8px;padding:14px 16px;margin-bottom:28px;
+  }
+  .note a{color:var(--accent-bright);}
+  h1{font-size:1.3rem;color:var(--ink);margin:0 0 6px;}
+  p.sub{color:var(--muted);font-size:.92rem;margin:0 0 28px;}
+  form{background:var(--surface);border:1px solid var(--hairline);border-radius:12px;padding:26px;}
+  .row{display:flex;gap:14px;margin-bottom:16px;}
+  .field{flex:1;margin-bottom:16px;}
+  .row .field{margin-bottom:0;}
+  label{display:block;font-size:.84rem;color:var(--ink);margin-bottom:6px;font-weight:500;}
+  input,textarea{
+    width:100%;font-family:var(--sans);font-size:.94rem;padding:10px 12px;
+    border:1px solid var(--hairline);border-radius:7px;background:var(--paper);color:var(--body);
+  }
+  input:focus,textarea:focus{outline:2px solid var(--accent-bright);outline-offset:1px;border-color:var(--accent-bright);}
+  textarea{resize:vertical;min-height:90px;}
+  button{
+    font-family:var(--mono);font-size:.86rem;background:var(--accent);color:#fff;border:none;
+    border-radius:7px;padding:11px 20px;cursor:pointer;
+  }
+  button:hover{background:var(--accent-bright);}
+  .result{margin-top:16px;font-family:var(--mono);font-size:.8rem;color:var(--muted);white-space:pre-wrap;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="note">Rendered directly from the JSON schema in <a href="../assets/smartformfields-example-schema.json" target="_blank" rel="noopener">smartformfields-example-schema.json</a> — the "Contact form" pattern from the SmartFormFields skill. Submitting only prints the collected values below; no backend is wired up in this standalone copy.</p>
+  <h1>Contact form</h1>
+  <p class="sub">id: firstName / lastName / email / message</p>
+  <form id="f">
+    <div class="row">
+      <div class="field"><label for="firstName">First Name</label><input id="firstName" name="firstName" type="text" required /></div>
+      <div class="field"><label for="lastName">Last Name</label><input id="lastName" name="lastName" type="text" required /></div>
+    </div>
+    <div class="field"><label for="email">Email</label><input id="email" name="email" type="email" required /></div>
+    <div class="field"><label for="message">Message</label><textarea id="message" name="message" required></textarea></div>
+    <button type="submit">Submit</button>
+    <div class="result" id="result"></div>
+  </form>
+</div>
+<script>
+  document.getElementById('f').addEventListener('submit', function(e){
+    e.preventDefault();
+    var data = Object.fromEntries(new FormData(e.target).entries());
+    document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+  });
+</script>
+</body>
+</html>
